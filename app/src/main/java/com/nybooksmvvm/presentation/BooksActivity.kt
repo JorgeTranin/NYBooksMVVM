@@ -2,12 +2,13 @@ package com.nybooksmvvm.presentation
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.LayoutInflater
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.nybooksmvvm.R
+import com.nybooksmvvm.ViewModel.BooksViewModel
 import com.nybooksmvvm.adapter.BooksAdapter
-import com.nybooksmvvm.data.model.Book
 import com.nybooksmvvm.databinding.ActivityBooksBinding
 
 class BooksActivity : AppCompatActivity() {
@@ -21,27 +22,44 @@ class BooksActivity : AppCompatActivity() {
         binding.toolbarMain.title = getString(R.string.books_title)
         setSupportActionBar(binding.toolbarMain)
 
-// Usando o with para acessar dentro da minha recylcer View, para não precisar acessar separadamente cada item
-        with(binding.recyclerViewBooks){
 
-            layoutManager = LinearLayoutManager(this@BooksActivity, RecyclerView.VERTICAL, false)
+// Inicializa uma instância do ViewModel BooksViewModel usando a ViewModelProvider API
 
-            //Dizendo que minha lista é fixa
-            setHasFixedSize(true)
+        val viewModel: BooksViewModel = ViewModelProvider(this).get(BooksViewModel::class.java)
 
-            adapter = BooksAdapter(this@BooksActivity,getBooks())
-        }
+
+        viewModel.booksLiveData.observe(this, Observer { // adiciona um observer à propriedade booksLiveData do ViewModel viewModel para
+            // observar mudanças em seu valor. O this passado como parâmetro indica o ciclo de vida do observador, que será destruído quando a atividade
+            // ou fragmento associado a ele for destruído.
+
+            it?.let {  books -> // verifica se it, que é o valor atual de booksLiveData, não é nulo. Se não for nulo, executa o bloco de código dentro do let.
+
+                with(binding.recyclerViewBooks){ // inicia um escopo with com o objeto binding.recyclerViewBooks como receptor.
+                    // Isso permite acessar suas propriedades e métodos sem repetir seu nome.
+
+
+                    // define o gerenciador de layout da RecyclerView como um LinearLayoutManager vertical, que organiza os itens em uma coluna única.
+                    // O primeiro parâmetro this@BooksActivity indica o contexto do layout manager.
+                    layoutManager = LinearLayoutManager(this@BooksActivity, RecyclerView.VERTICAL, false)
+
+                    setHasFixedSize(true) // indica que o tamanho da RecyclerView não será alterado durante o tempo de execução.
+                    // Isso pode melhorar o desempenho, pois permite que a RecyclerView otimize a exibição dos itens.
+
+                    adapter = BooksAdapter(this@BooksActivity,books) // define o adaptador da RecyclerView como uma instância de BooksAdapter,
+                // que recebe this@BooksActivity como contexto e books como dados a serem exibidos.
+                }
+
+            }
+        })
+
+
+        viewModel.getBooks()
+
+
+
     }
 
-// função com lista de livros para testes
-    fun getBooks(): List<Book>{
-        return listOf(
-            Book("Titulo 1", " author 1"),
-            Book("Titulo 2", " author 2"),
-            Book("Titulo 3", " author 3"),
-            Book("Titulo 4", " author 4")
-        )
-    }
+
 
 
 }
